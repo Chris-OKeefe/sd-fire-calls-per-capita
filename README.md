@@ -9,10 +9,10 @@ Zip code level population data from [SANDAG Data Surfer](datasurfer.sandag.org)
 *Downloaded data as .xls file (save as .ods)
 
 ##To do
-0. Figure out how to programmatically convert xlsx into ods.
-1. Read data into Python
+1. Read data into R
 2. Collapse data at Zip code level.
 3. Combine fire calls and population data.
 4. Get SD county zip code shape files.
 5. Map data.
-6. Publish as webpage.
+6. Publish.
+7. Profit!

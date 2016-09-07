@@ -8,6 +8,8 @@ Zip code level population data from [SANDAG Data Surfer](datasurfer.sandag.org)
 *Selected all zips on data view page
 *Downloaded data as .xls file (save as .ods)
 
+Zip code shapefiles from [SanGIS/SANDAG GIS Data Warehouse](www.sangis.org). Zip shapefiles are under the 'Miscellaneous' link in 'GIS Data Categories'.
+
 ##To do
 1. Read data into R
 2. Collapse data at Zip code level.

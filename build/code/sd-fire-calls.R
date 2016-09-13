@@ -7,6 +7,13 @@ library(dplyr)
 
 rm(list = ls())
 
+simpleCap <- function(x) {
+    x <- as.character(x)
+    s <- strsplit(x, " ")[[1]]
+    paste(toupper(substring(s, 1,1)), substring(s, 2),
+          sep="", collapse=" ")
+}
+
 function(start_date, end_date, variable){
     aggregate() #fd_calls
     aggregate() #sd_pop
@@ -31,19 +38,22 @@ fd_calls$date <- as.Date(fd_calls$date)
 fd_calls$call_cat_count <- 1 #initialize a var = 1 for each row 
 call_cat_ag <- aggregate(x = fd_calls$call_cat_count, by = list(fd_calls$call_category, fd_calls$date, fd_calls$zip), FUN = sum)
 names(call_cat_ag) <- c("call_category", "date", "zip", "calls")
-call_cat_ag$zip <- as.numeric(call_cat_ag$zip)
-
-#Remove errors in zip coding
 call_cat_ag <- call_cat_ag[which(nchar(as.character(call_cat_ag$zip)) ==5),]
+call_cat_ag$zip <- as.numeric(levels(call_cat_ag$zip)[call_cat_ag$zip])
+#call_cat_ag$call_category <- simpleCap(call_cat_ag$call_category)
+    
+#Remove errors in zip coding
 
 ##SD Population Data##
 pop_ag <- aggregate(x = sd_pop$POPULATION, by = list(sd_pop$ZIP), FUN = sum)
-names(pop_ag) <- c(zip, population)
+names(pop_ag) <- c("zip", "population")
 pop_ag$zip <- as.numeric(pop_ag$zip)
 
 ##Zip Data##
 names(sd_zip) <- tolower(names(sd_zip))
 #It looks like Sullins' Tableau project aggregates on the fly based on the date range you give it.
 #Plot Shapefiles (verify it's in properly)
+
+sd_zip@data <- left_join(sd_zip@data, call_cat_ag, by = "zip")
 
 plot(sd_zip)

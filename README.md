@@ -11,10 +11,10 @@ Zip code level population data from [SANDAG Data Surfer](datasurfer.sandag.org)
 Zip code shapefiles from [SanGIS/SANDAG GIS Data Warehouse](www.sangis.org). Zip shapefiles are under the 'Miscellaneous' link in 'GIS Data Categories'.
 
 ##To do
-1. Read data into R
-2. Collapse data at Zip code level.
-3. Combine fire calls and population data.
-4. Get SD county zip code shape files.
+1. Read data into R. DONE
+2. Collapse data at Zip code level. DONE
+3. Combine fire calls and population data. DONE
+4. Get SD county zip code shape files. DONE
 5. Map data.
 6. Publish.
 7. Profit!

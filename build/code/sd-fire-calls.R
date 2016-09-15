@@ -4,15 +4,11 @@ library(rgeos)
 library(maptools)
 library(readxl)
 library(dplyr)
+library(stringi)
+library(reshape)
+library(tmap)
 
 rm(list = ls())
-
-simpleCap <- function(x) {
-    x <- as.character(x)
-    s <- strsplit(x, " ")[[1]]
-    paste(toupper(substring(s, 1,1)), substring(s, 2),
-          sep="", collapse=" ")
-}
 
 function(start_date, end_date, variable){
     aggregate() #fd_calls
@@ -24,7 +20,7 @@ function(start_date, end_date, variable){
 #SD zip code shapefiles
 sd_zip  <- readOGR("./build/input/zip_code_shapefiles", "ZIP_CODES")
 fd_calls <- read.csv("./build/input/fd_incidents_past_12_mo_datasd.csv", na.strings = "")
-    #Assume missing data is zero?
+#Assume missing data is zero?
 sd_pop <- read_excel("./build/input/census_2010_zip_1472015764836.xlsx", sheet = "Age")
 
 #Aggregate sd_pop and fd_calls before merging
@@ -37,12 +33,21 @@ fd_calls$date <- as.Date(fd_calls$date)
 #Aggregate FD calls data by call category, date, and zip code.
 fd_calls$call_cat_count <- 1 #initialize a var = 1 for each row 
 call_cat_ag <- aggregate(x = fd_calls$call_cat_count, by = list(fd_calls$call_category, fd_calls$date, fd_calls$zip), FUN = sum)
-names(call_cat_ag) <- c("call_category", "date", "zip", "calls")
-call_cat_ag <- call_cat_ag[which(nchar(as.character(call_cat_ag$zip)) ==5),]
-call_cat_ag$zip <- as.numeric(levels(call_cat_ag$zip)[call_cat_ag$zip])
-#call_cat_ag$call_category <- simpleCap(call_cat_ag$call_category)
-    
-#Remove errors in zip coding
+names(call_cat_ag) <- c("call_category", "date", "zip", "calls") #assign names to columns
+call_cat_ag <- call_cat_ag[which(nchar(as.character(call_cat_ag$zip)) ==5),] #remove errors in Zip coding
+call_cat_ag$zip <- as.numeric(levels(call_cat_ag$zip)[call_cat_ag$zip]) #convert zip codes to numeric
+
+#Create Total rows
+call_cat_ag$call_category <- stri_trans_totitle(call_cat_ag$call_category) # convert to title case.
+call_category <- aggregate(calls ~ date + zip, data = call_cat_ag, FUN = sum, na.action = na.omit) #generate Total calls data
+call_type <- "Total" 
+call_category  <- cbind(call_type, call_category) #combind call_type, call_category data
+names(call_category) <- c("call_category", "date", "zip", "calls") #rename call_category data
+call_cat_ag <- rbind(call_cat_ag, call_category) #combine call_cat_ag, call_category data
+
+#Reshape Data
+call_cat_ag_melt <- melt(call_cat_ag, id.vars = c("zip", "date", "call_category"), measure.vars = c("calls"))
+call_cat_ag_cast <- cast(call_cat_ag_melt, zip + date ~ call_category) #reshape data (before merge)
 
 ##SD Population Data##
 pop_ag <- aggregate(x = sd_pop$POPULATION, by = list(sd_pop$ZIP), FUN = sum)
@@ -51,9 +56,10 @@ pop_ag$zip <- as.numeric(pop_ag$zip)
 
 ##Zip Data##
 names(sd_zip) <- tolower(names(sd_zip))
-#It looks like Sullins' Tableau project aggregates on the fly based on the date range you give it.
-#Plot Shapefiles (verify it's in properly)
 
-sd_zip@data <- left_join(sd_zip@data, call_cat_ag, by = "zip")
+sd_zip@data <- left_join(sd_zip@data, call_cat_ag_cast, by = "zip")
 
 plot(sd_zip)
+
+#I need to find a way to aggregate over an arbitrary range of dates in sd_zip$date
+#Until I do that I can't actually plot the data.

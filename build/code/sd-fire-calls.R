@@ -54,12 +54,40 @@ pop_ag <- aggregate(x = sd_pop$POPULATION, by = list(sd_pop$ZIP), FUN = sum)
 names(pop_ag) <- c("zip", "population")
 pop_ag$zip <- as.numeric(pop_ag$zip)
 
+##Merge Population, Fire calls data
+pop_fire <- merge(pop_ag, call_cat_ag_cast, by = "zip")
+#Create month-year data
+pop_fire$month <- substr(pop_fire$date, 1, 7)
+
+#subset data (by date range specified by Shiny input. For now, do it by the data here.)
+sd_subset <- subset(pop_fire, date >= "2015-08-19" & date <= "2015-08-29")
+
+##Aggrtegate by zip, call type, month (based on input)
+#Initialize "Per Capita" Variables
+for (n in names(sd_subset)[4:12]){
+    sd_subset[[paste0(n," Per Capita")]] <- NA
+}
+
+#Aggregating for Call type data
+for (n in names(sd_subset)[4:12]){
+    sd_subset[[paste0(n, "_data")]] <- aggregate(x = sd_subset$n, by = list(sd_subset$zip), FUN = sum)
+}
+
+for (n in names(sd_subset)[4:12]){
+    sd_subset[[paste0(n, "_data")]] <- aggregate(x = paste0("sd_subset$",n), by = list(sd_subset$zip), FUN = sum)
+}
+
+Total_data <- aggregate(x = sd_subset$Total, by = list(sd_subset$zip), FUN = sum) # can't calc pc until after this has collapsed by zip
+call_data <- aggregate(x = sd_subset$x , by = list(sd_subset$[call type]), FUN = [percent of total]) #apply and do for all call types
+month_data <- aggregate(x = sd_subset$Total, by = list(sd_subset$month))
+
 ##Zip Data##
 names(sd_zip) <- tolower(names(sd_zip))
 
-sd_zip@data <- left_join(sd_zip@data, call_cat_ag_cast, by = "zip")
+#Merge aggregated Pop/Fire data with zip data
+#sd_zip@data <- left_join(sd_zip@data, call_cat_ag_cast, by = "zip")
 
-plot(sd_zip)
+#plot(sd_zip)
 
 #I need to find a way to aggregate over an arbitrary range of dates in sd_zip$date
 #Until I do that I can't actually plot the data.
